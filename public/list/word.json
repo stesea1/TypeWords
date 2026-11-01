@@ -46,5 +46,29 @@
     "tags": [
       "日语能力考"
     ]
+  },
+  {
+    "id": 9002,
+    "enName": "jlpt_n2",
+    "name": "日语 N2 词汇",
+    "description": "JLPT N2 词汇 1828 个，附汉字写法、词性和中文释义。词表来源：Jonathan Waller (tanos.co.uk, CC BY)",
+    "categoryId": 90,
+    "url": "JLPT_N2.json",
+    "length": 1828,
+    "language": "ja",
+    "translateLanguage": "zh_CN",
+    "version": 1,
+    "type": "word",
+    "isDefault": false,
+    "recommended": true,
+    "userId": "00000000-0000-0000-0000-000000000001",
+    "createdAt": "2026-11-02 00:00:00",
+    "updatedAt": "2026-11-02 00:00:00",
+    "cover": null,
+    "hidden": false,
+    "category": "日语",
+    "tags": [
+      "日语能力考"
+    ]
   }
 ]

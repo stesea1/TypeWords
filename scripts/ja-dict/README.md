@@ -11,7 +11,7 @@
    pnpm dev
    ```
 
-2. 浏览器打开 http://localhost:3000 → 单词 → 选择词典 → 「日语」分类下的「日语 N5 基础词汇」→ 学习。
+2. 浏览器打开 http://localhost:3000 → 单词 → 选择词典 → 「日语」分类下选「日语 N5 基础词汇」或「日语 N2 词汇」→ 学习。
 3. **把系统输入法切到英文（半角）**，直接敲罗马字即可，不需要日语输入法。
 
 ## 输入规则
@@ -32,6 +32,15 @@
 - 正在输入、还没凑成假名的字母会以灰色小字显示在光标前，按退格先删这些字母。
 - 默写模式不看答案，自由转换，按空格提交。
 - 发音用有道日语发音，打不开时退回浏览器自带的日语语音（需要系统装有日语语音包）。
+
+## 词库
+
+| 词库 | 词数 | 内容 | 源文件 |
+| --- | --- | --- | --- |
+| 日语 N5 基础词汇 | 279 | 读音、汉字、词性、中文释义、注音例句 | `jlpt_n5.tsv` |
+| 日语 N2 词汇 | 1828 | 读音、汉字、词性、中文释义（无例句） | `jlpt_n2.tsv` |
+
+N2 的词表和读音来自 Jonathan Waller 整理的 JLPT 词表（[tanos.co.uk/jlpt](https://www.tanos.co.uk/jlpt/)，CC BY 许可），经 [Bluskyo/JLPT_Vocabulary](https://github.com/Bluskyo/JLPT_Vocabulary) 转成 CSV；去掉了 PDF 解析留下的残片，补全了被截断的词（如 オートメーション、かしこまりました）。词性和中文释义是本项目补充的。注意：2010 年后官方不再公布考试词表，各家 N2 词表都是估计版。
 
 ## 添加或修改词库
 
@@ -62,7 +71,7 @@
 | `app/components/word/TypeWord.vue` | 显示汉字写法和罗马字提示；日语词不进入例句逐词输入 |
 | `app/components/word/WordMetaPanel.vue` | 修复：例句没有可输入的英文单词时会被误判为“完成”，导致跳词并记错 |
 | `app/core/hooks/sound.ts` | 日语单词用日语发音，朗读例句时去掉注音括号 |
-| `public/dicts/ja/word/JLPT_N5.json`、`public/list/*.json` | N5 词库与词库列表 |
+| `public/dicts/ja/word/JLPT_N5.json`、`JLPT_N2.json`、`public/list/*.json` | N5、N2 词库与词库列表 |
 
 运行测试：`node --experimental-strip-types scripts/ja-dict/romaji.test.ts`（Node 22+）。
 

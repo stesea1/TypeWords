@@ -5,12 +5,13 @@ import { WordPlayTrigger, WordPracticeType } from '@/core/types/enum.ts'
 import { useSettingStore } from '@/core/stores/setting.ts'
 import { resetActiveWordPlayCount, usePlayBeep, usePlayCorrect, usePlayKeyboardAudio } from '@/core/hooks/sound.ts'
 import { emitter, EventKey } from '@/core/utils/eventBus.ts'
-import { onUnmounted, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import Space from '@/components/article/Space.vue'
 import { _nextTick, last } from '@/core/utils'
 import { useOnKeyboardEventListener } from '@/core/hooks/event.ts'
 import { Toast } from '@/base'
 import { usePracticeWordTyping } from '@/core/composables/practice-words/usePracticeWordTyping.ts'
+import { isJapaneseText, isKatakanaText, RomajiFreeConverter, RomajiGuide } from '@/core/utils/romaji.ts'
 
 interface IProps {
   word: Word
@@ -81,7 +82,55 @@ const displayWord = $computed(() => props.word.word.slice(input.value.length + w
 let cursor = $ref({ top: 0, left: 0 })
 const typingWordRef = $ref<HTMLDivElement>()
 
+// ---- 日语：罗马字输入 → 假名 ----
+const isJapaneseWord = $computed(() => isJapaneseText(props.word.word))
+const romajiGuide = new RomajiGuide()
+const romajiFree = new RomajiFreeConverter()
+/** 正在输入、尚未组成假名的罗马字 */
+const romajiPending = ref('')
+
+function resetRomaji() {
+  romajiGuide.reset()
+  romajiFree.reset()
+  romajiPending.value = ''
+}
+
+function typeKana(text: string) {
+  for (const ch of text) typeCharacter({ key: ch, code: '', shiftKey: false })
+}
+
+function onJapaneseTyping(event: KeyboardEvent) {
+  const isDictation = props.practiceType === WordPracticeType.Dictation
+  const isSpaceKey = event.code === 'Space' || event.key === ' '
+  if (event.code === 'Backspace') {
+    const handled = isDictation ? romajiFree.backspace() : romajiGuide.backspace()
+    if (!handled) backspace()
+  } else if (isDictation) {
+    // 默写：不看答案，自由转换，按空格提交
+    romajiFree.katakana = isKatakanaText(props.word.word)
+    if (isSpaceKey) {
+      typeKana(romajiFree.flush())
+      typeCharacter({ key: ' ', code: 'Space', shiftKey: false })
+    } else if (event.key.length === 1 || isJapaneseText(event.key)) {
+      typeKana(romajiFree.feed(event.key))
+    }
+  } else if (isSpaceKey || inputLock.value) {
+    // 单词已打完 / 等待空格等状态，交给原有逻辑
+    romajiGuide.reset()
+    typeCharacter({ key: event.key, code: event.code, shiftKey: event.shiftKey })
+  } else if (event.key.length === 1 || isJapaneseText(event.key)) {
+    // 跟打 / 自测：按目标假名逐键判定
+    const remaining = props.word.word.slice(input.value.length)
+    for (const result of romajiGuide.feed(event.key, remaining)) {
+      if (result.type === 'commit') typeKana(result.text)
+      else if (result.type === 'wrong') typeCharacter({ key: result.key, code: event.code, shiftKey: false })
+    }
+  }
+  romajiPending.value = isDictation ? romajiFree.buffer : romajiGuide.buffer
+}
+
 function onTyping(event: KeyboardEvent) {
+  if (isJapaneseWord) return onJapaneseTyping(event)
   if (event.code === 'Backspace') {
     backspace()
     return
@@ -113,6 +162,7 @@ function checkCursorPosition() {
 }
 
 function resetTypingCore(trigger: WordPlayTrigger) {
+  resetRomaji()
   reset(trigger)
   checkCursorPosition()
 }
@@ -132,7 +182,7 @@ watch(
   { immediate: true }
 )
 
-watch([input, () => props.showFullWord, () => props.practiceType], checkCursorPosition)
+watch([input, romajiPending, () => props.showFullWord, () => props.practiceType], checkCursorPosition)
 
 function deactivate() {
   clearDeferredTimers()
@@ -184,6 +234,7 @@ defineExpose({
           <span class="l" v-if="i !== ' '">{{ i }}</span>
           <Space class="l" v-else :is-wrong="showWordResult ? !isWordCorrect : false" :is-wait="!showWordResult" />
         </template>
+        <span class="l romaji-pending" v-if="romajiPending">{{ romajiPending }}</span>
       </div>
     </div>
 
@@ -199,6 +250,7 @@ defineExpose({
       </template>
       <span class="input" v-else-if="input">{{ input }}</span>
       <span class="wrong" v-if="wrong">{{ wrong }}</span>
+      <span class="romaji-pending" :class="wholeInputAttempt && 'l'" v-if="romajiPending">{{ romajiPending }}</span>
       <span class="letter" v-if="isWordMasked && !showFullWord">
         {{
           displayWord
@@ -241,6 +293,14 @@ defineExpose({
 
   .wrong {
     color: rgba(red, 0.6);
+  }
+
+  .romaji-pending {
+    color: var(--color-font-1);
+    opacity: 0.55;
+    font-size: 0.6em;
+    text-decoration: underline dotted;
+    margin: 0 0.05em;
   }
 }
 </style>

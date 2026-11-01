@@ -33,6 +33,7 @@ import WordMetaPanel from './WordMetaPanel.vue'
 import { useOnKeyboardEventListener } from '@/core/hooks/event.ts'
 import { _nextTick, throttle } from '@/core'
 import { usePracticeTypeWordController } from '@/core/composables/practice-words/usePracticeTypeWordController.ts'
+import { isJapaneseText, kanaToRomaji } from '@/core/utils/romaji.ts'
 
 const { t: $t } = useI18n()
 
@@ -61,6 +62,13 @@ const emit = defineEmits<{
 
 const settingStore = useSettingStore()
 const store = useBaseStore()
+
+// 日语单词：word 为假名读音，phonetic0 为汉字写法
+const isJapaneseWord = $computed(() => isJapaneseText(props.word.word))
+const japaneseKanji = $computed(() =>
+  isJapaneseWord && props.word.phonetic0 && props.word.phonetic0 !== props.word.word ? props.word.phonetic0 : ''
+)
+const japaneseRomaji = $computed(() => (isJapaneseWord ? kanaToRomaji(props.word.word) : ''))
 
 // ============ 音频 ============
 const playWordAudio = usePlayWordAudio()
@@ -100,6 +108,7 @@ function onTypingCoreComplete() {
   if (
     [WordPracticeType.FollowWrite, WordPracticeType.Spell].includes(props.practiceType) &&
     settingStore.practiceSentence &&
+    !isJapaneseWord && // 日语例句暂不支持逐词输入
     props.word.sentences.length
   ) {
     isTypingWord = false
@@ -316,18 +325,22 @@ useEvents([
   <div class="typing-word" v-if="word.word.length">
     <div class="flex flex-col items-center">
       <!-- 音标 + 发音按钮（通过 slot 传入 VolumeIcon） -->
-      <div class="flex gap-1 mt-10 md:mt-30">
+      <div class="flex gap-1 mt-10 md:mt-30 items-center">
+        <template v-if="isJapaneseWord">
+          <div class="ja-kanji" v-if="japaneseKanji">{{ japaneseKanji }}</div>
+          <div class="phonetic ja-romaji" :class="effective.isWordMasked && 'word-shadow'">{{ japaneseRomaji }}</div>
+        </template>
         <div
           class="phonetic"
           :class="effective.isWordMasked && 'word-shadow'"
-          v-if="settingStore.soundType === 'uk' && word.phonetic0"
+          v-else-if="settingStore.soundType === 'uk' && word.phonetic0"
         >
           / {{ word.phonetic0 }} /
         </div>
         <div
           class="phonetic"
           :class="effective.isWordMasked && 'word-shadow'"
-          v-if="settingStore.soundType === 'us' && word.phonetic1"
+          v-else-if="settingStore.soundType === 'us' && word.phonetic1"
         >
           / {{ word.phonetic1 }} /
         </div>
@@ -481,6 +494,18 @@ useEvents([
     color: var(--color-font-1);
     font-family: var(--word-font-family);
     font-size: 1.2rem;
+  }
+
+  .ja-kanji {
+    color: var(--color-font-1);
+    font-size: 2rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    letter-spacing: 0.1rem;
+  }
+
+  .ja-romaji {
+    opacity: 0.7;
   }
 
   .word {

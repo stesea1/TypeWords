@@ -4,6 +4,7 @@ import { ref } from 'vue'
 
 import { ENV, PronunciationApi, SoundFileOptions } from '../config/env'
 import { Toast } from '@/base'
+import { isJapaneseText, stripFurigana } from '../utils/romaji'
 
 /**
  * 获取当前浏览器的 OS+浏览器 组合 key，用于 ttsVoiceMap 的索引
@@ -209,8 +210,12 @@ export function usePlayWordAudio() {
       }, 5000)
     }
     // console.log('playAudio-handle', handle, playbackRate)
+    const isJapanese = isJapaneseText(word)
     let url = `${PronunciationApi}${word}&type=2`
-    if (settingStore.soundType === 'uk') {
+    if (isJapanese) {
+      // 日语单词：有道日语发音
+      url = `${PronunciationApi}${encodeURIComponent(word)}&le=jap`
+    } else if (settingStore.soundType === 'uk') {
       url = `${PronunciationApi}${word}&type=1`
     }
     let onended = () => {
@@ -222,7 +227,7 @@ export function usePlayWordAudio() {
     wordAudio.onerror = () => {
       if (generation !== wordPlaybackGeneration) return
       const ttsPlay = useTTsPlayAudio()
-      ttsPlay(word, { rate: playbackRate, onEnd: onended })
+      ttsPlay(word, { rate: playbackRate, onEnd: onended, lang: isJapanese ? 'ja-JP' : undefined })
     }
     wordAudio.src = url
     wordAudio.volume = settingStore.wordSoundVolume / 100
@@ -263,11 +268,20 @@ export function useTTsPlayAudio() {
     msg.rate = options.rate ?? settingStore.wordSoundSpeed
     msg.volume = options.volume ?? settingStore.wordSoundVolume / 100
     msg.pitch = options.pitch ?? 1
-    msg.lang = options.lang ?? 'en-US'
+    const lang = options.lang ?? (isJapaneseText(text) ? 'ja-JP' : 'en-US')
+    if (lang.startsWith('ja')) msg.text = stripFurigana(text)
+    msg.lang = lang
     msg.onend = () => options.onEnd?.()
     msg.onerror = () => options.onEnd?.()
     getVoicesAsync().then((voices: any[]) => {
       if (generation !== ttsPlaybackGeneration) return
+      if (lang.startsWith('ja')) {
+        // 日语：只用日语声色，找不到时交给浏览器按 lang 自动选择
+        const jaVoice = voices.find(v => v.lang?.replace('_', '-').startsWith('ja'))
+        if (jaVoice) msg.voice = jaVoice
+        speechSynthesis.speak(msg)
+        return
+      }
       // 优先使用用户在当前浏览器配置的声色
       const browserKey = getBrowserKey()
       const savedVoiceName = settingStore?.ttsVoiceMap?.find(v => v.key === browserKey)?.voice

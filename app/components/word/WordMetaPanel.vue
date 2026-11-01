@@ -128,6 +128,8 @@ watch(
 )
 
 function onCompleteSentence(text: string) {
+  // 没有开始练习例句时（例如例句里没有可输入的英文单词，挂载时就会触发完成），忽略
+  if (activeSentenceIndex < 0) return
   //简单比对，句子里面是否有当前单词，没有则为错
   if (!text.includes(props.word.word)) emit('wrong')
   if (activeSentenceIndex < props.word.sentences.length - 1) {

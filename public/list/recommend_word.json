@@ -19,6 +19,32 @@
     "cover": null,
     "hidden": false,
     "category": "中国考试",
-    "tags": ["大学英语"]
+    "tags": [
+      "大学英语"
+    ]
+  },
+  {
+    "id": 9001,
+    "enName": "jlpt_n5",
+    "name": "日语 N5 基础词汇",
+    "description": "JLPT N5 常用词 279 个，输入罗马字练假名，附汉字、中文释义和注音例句",
+    "categoryId": 90,
+    "url": "JLPT_N5.json",
+    "length": 279,
+    "language": "ja",
+    "translateLanguage": "zh_CN",
+    "version": 1,
+    "type": "word",
+    "isDefault": false,
+    "recommended": true,
+    "userId": "00000000-0000-0000-0000-000000000001",
+    "createdAt": "2026-11-01 00:00:00",
+    "updatedAt": "2026-11-01 00:00:00",
+    "cover": null,
+    "hidden": false,
+    "category": "日语",
+    "tags": [
+      "日语能力考"
+    ]
   }
 ]

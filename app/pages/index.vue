@@ -155,7 +155,7 @@ const playDemoCorrect = usePlayCorrect()
 let mobileMenuOpen = $ref(false)
 
 useSeoMeta({
-  title: () => 'TypeWords',
+  title: () => '日语打字练习（基于 TypeWords）',
   ogUrl: 'https://typewords.cc/',
 })
 </script>

@@ -14,6 +14,16 @@
 2. 浏览器打开 http://localhost:3000 → 单词 → 选择词典 → 「日语」分类下选「日语 N5 基础词汇」或「日语 N2 词汇」→ 学习。
 3. **把系统输入法切到英文（半角）**，直接敲罗马字即可，不需要日语输入法。
 
+## 卡片记忆（不用打字）
+
+选好日语词典后，单词页会多一个「卡片记忆（不用打字）」按钮，适合手机上快速过词：
+
+1. 正面只显示汉字（没有汉字的词显示假名），先在心里回想读音和意思。
+2. 点卡片（或按空格）翻面，看读音、罗马字、释义和例句，会自动发音。
+3. 自评：**不认识**（隔几张再出现，并加入错词本）/ **模糊** / **认识** / **已掌握**（以后不再出现）。电脑上可按 1～4。
+
+复习时间沿用网站原有的记忆曲线（FSRS），和打字模式共用同一份记录；新词学过后会推进词典进度，中途退出也会保存。
+
 ## 输入规则
 
 和日语输入法的打法一致，常见的几种拼法都能识别：
@@ -70,7 +80,8 @@ N2 的词表和读音来自 Jonathan Waller 整理的 JLPT 词表（[tanos.co.uk
 | `app/components/word/WordTypingCore.vue` | 日语单词的键盘输入改走罗马字引擎，显示未完成的字母 |
 | `app/components/word/TypeWord.vue` | 显示汉字写法和罗马字提示；日语词不进入例句逐词输入 |
 | `app/components/word/WordMetaPanel.vue` | 修复：例句没有可输入的英文单词时会被误判为“完成”，导致跳词并记错 |
-| `app/core/hooks/sound.ts` | 日语单词用日语发音，朗读例句时去掉注音括号 |
+| `app/core/hooks/sound.ts` | 日语单词用日语发音，朗读例句时去掉注音括号；子路径部署时音效加上 baseURL |
+| `app/pages/(words)/cards/[id].vue`、`app/pages/(words)/words.vue` | 卡片记忆页面和入口按钮 |
 | `public/dicts/ja/word/JLPT_N5.json`、`JLPT_N2.json`、`public/list/*.json` | N5、N2 词库与词库列表 |
 
 运行测试：`node --experimental-strip-types scripts/ja-dict/romaji.test.ts`（Node 22+）。

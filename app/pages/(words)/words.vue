@@ -36,6 +36,7 @@ import Book from '@/components/Book.vue'
 import { getDefaultDict } from '@/core/types/func.ts'
 import PracticeSettingDialog from '@/components/word/PracticeSettingDialog.vue'
 import ChangeLastPracticeIndexDialog from '@/components/word/ChangeLastPracticeIndexDialog.vue'
+import { isJapaneseText } from '@/core/utils/romaji.ts'
 import { useSettingStore } from '@/core/stores/setting.ts'
 import { useFetch } from '@vueuse/core'
 import {
@@ -477,6 +478,10 @@ function toggleSelect(item) {
   }
 }
 
+const isJapaneseDict = $computed(
+  () => store.sdict.language === 'ja' || isJapaneseText(store.sdict.words?.[0]?.word)
+)
+
 const progressTextLeft = $computed(() => {
   if (store.sdict.complete) return '已学完，进入总复习阶段'
   return '当前进度：已学' + store.currentStudyProgress + '%'
@@ -766,6 +771,20 @@ onUnmounted(() => {
             </div>
           </BaseButton>
         </div>
+        <!-- 日语词典：卡片记忆（不用打字） -->
+        <BaseButton
+          v-if="isJapaneseDict"
+          class="mt-3 w-full"
+          size="large"
+          type="primary"
+          :disabled="!store.sdict.id"
+          @click="router.push('/cards/' + store.sdict.id)"
+        >
+          <div class="flex items-center gap-2">
+            <span class="line-height-[2]">卡片记忆（不用打字）</span>
+            <IconFluentArrowCircleRight16Regular class="text-xl" />
+          </div>
+        </BaseButton>
       </div>
     </div>
 

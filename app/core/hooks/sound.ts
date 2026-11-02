@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import { ENV, PronunciationApi, SoundFileOptions } from '../config/env'
 import { Toast } from '@/base'
 import { isJapaneseText, stripFurigana } from '../utils/romaji'
+import { withAppBaseURL } from '../utils/base-url'
 
 /**
  * 获取当前浏览器的 OS+浏览器 组合 key，用于 ttsVoiceMap 的索引
@@ -59,7 +60,8 @@ export function useSound(audioSrcList?: string[], audioFileLength?: number) {
     if (audioFileLength2) audioLength.value = audioFileLength2
     audioList.value = []
     for (let i = 0; i < audioLength.value; i++) {
-      audioSrcList2.map(src => audioList.value.push(new Audio(ENV.RESOURCE_URL + src)))
+      // 部署在子路径（如 GitHub Pages 的 /TypeWords/）时需要加上 baseURL
+      audioSrcList2.map(src => audioList.value.push(new Audio(withAppBaseURL(ENV.RESOURCE_URL + src))))
     }
     index.value = 0
   }
@@ -306,7 +308,7 @@ export function useTTsPlayAudio() {
 }
 
 export function usePlayAudio(url: string) {
-  void new Audio(url).play().catch(() => {})
+  void new Audio(withAppBaseURL(url)).play().catch(() => {})
 }
 
 export function getAudioFileUrl(name: string) {

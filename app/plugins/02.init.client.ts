@@ -4,7 +4,9 @@ import { ENV } from '@/core/config/env.ts'
 import { withAppBaseURL } from '@/core/utils/base-url'
 
 export default defineNuxtPlugin(async nuxtApp => {
+  // 原项目的访问统计（51.la / 百度统计，用的是原作者的账号），只在官方站点加载，fork 部署的版本不加载
   if (
+    location.hostname.endsWith('typewords.cc') &&
     !location.href.includes('localhost') &&
     !location.href.includes('192.168') &&
     !location.href.includes('172.16') &&
